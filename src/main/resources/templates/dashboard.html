@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DakPay — Offline UPI Mesh</title>
+    <style>
+        :root {
+            --bg: #070b14;
+            --surface: #0d1422;
+            --surface-2: #111a2b;
+            --border: #1e2a3d;
+            --text: #eef4ff;
+            --muted: #8d9bb2;
+            --primary: #6d7cff;
+            --primary-2: #8c6cff;
+            --success: #27d17f;
+            --danger: #ff5d6c;
+            --warning: #f3b64c;
+            --shadow: 0 18px 50px rgba(0,0,0,.28);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 0%, rgba(109,124,255,.16), transparent 32%),
+                radial-gradient(circle at 90% 10%, rgba(140,108,255,.12), transparent 30%),
+                var(--bg);
+        }
+
+        button, input, select { font: inherit; }
+
+        .container {
+            width: min(1280px, calc(100% - 36px));
+            margin: 0 auto;
+            padding: 28px 0 50px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            box-shadow: 0 10px 30px rgba(109,124,255,.28);
+            font-weight: 900;
+            font-size: 20px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 21px;
+            letter-spacing: -.4px;
+        }
+
+        .brand p {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(13,20,34,.72);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 12px rgba(39,209,127,.7);
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 34px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background:
+                linear-gradient(135deg, rgba(109,124,255,.12), rgba(140,108,255,.04)),
+                var(--surface);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            right: -100px;
+            top: -130px;
+            border-radius: 50%;
+            background: rgba(109,124,255,.10);
+            filter: blur(4px);
+        }
+
+        .eyebrow {
+            color: #aeb8ff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .hero h2 {
+            margin: 9px 0 10px;
+            font-size: clamp(28px, 4vw, 43px);
+            letter-spacing: -1.4px;
+            max-width: 760px;
+        }
+
+        .hero p {
+            max-width: 760px;
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .metric {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: rgba(7,11,20,.45);
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .metric-value {
+            margin-top: 7px;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            background: var(--surface);
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 9px;
+            background: rgba(109,124,255,.14);
+            color: #b7beff;
+            font-weight: 800;
+            font-size: 12px;
+            margin-bottom: 13px;
+        }
+
+        .step strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .step span {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 19px;
+            background: rgba(13,20,34,.92);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .section-heading h3 {
+            margin: 0;
+            font-size: 17px;
+        }
+
+        .section-heading p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 150px 130px auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin: 0 0 6px 2px;
+        }
+
+        input, select {
+            width: 100%;
+            min-height: 42px;
+            color: var(--text);
+            background: #080e19;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 9px 12px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: rgba(109,124,255,.8);
+            box-shadow: 0 0 0 3px rgba(109,124,255,.12);
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 14px;
+        }
+
+        button {
+            min-height: 40px;
+            border: 0;
+            border-radius: 10px;
+            padding: 9px 14px;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            font-weight: 700;
+            font-size: 12px;
+            transition: transform .15s ease, opacity .15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            opacity: .94;
+        }
+
+        button.secondary {
+            background: #18243a;
+            border: 1px solid var(--border);
+        }
+
+        button.danger {
+            background: rgba(255,93,108,.12);
+            color: #ff8792;
+            border: 1px solid rgba(255,93,108,.22);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .device {
+            padding: 13px;
+            margin-bottom: 9px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: #090f1b;
+        }
+
+        .device.bridge {
+            border-color: rgba(39,209,127,.32);
+            background: rgba(39,209,127,.055);
+        }
+
+        .device.offline { opacity: .86; }
+
+        .device-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .device-name {
+            font-weight: 750;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .badge-online {
+            background: rgba(39,209,127,.12);
+            color: #55e59a;
+        }
+
+        .badge-offline {
+            background: rgba(141,155,178,.10);
+            color: #aab5c8;
+        }
+
+        .packet-id {
+            display: inline-block;
+            margin: 7px 4px 0 0;
+            padding: 3px 6px;
+            border-radius: 5px;
+            background: #111a2b;
+            color: #93a4bd;
+            font: 10px "Cascadia Code", Consolas, monospace;
+        }
+
+        .small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            font-weight: 800;
+        }
+
+        tbody tr:hover { background: rgba(109,124,255,.035); }
+
+        .balance {
+            color: #65e7a2;
+            font-weight: 800;
+        }
+
+        .status-SETTLED {
+            color: #55e59a;
+            font-weight: 800;
+        }
+
+        .status-REJECTED,
+        .status-INVALID {
+            color: #ff7581;
+            font-weight: 800;
+        }
+
+        .status-DUPLICATE_DROPPED {
+            color: #f4c15d;
+            font-weight: 800;
+        }
+
+        #log {
+            min-height: 100px;
+            max-height: 240px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            padding: 15px;
+            border-radius: 12px;
+            background: #050913;
+            border: 1px solid var(--border);
+            color: #79e6ac;
+            font: 11px/1.65 "Cascadia Code", Consolas, monospace;
+        }
+
+        .footer {
+            margin-top: 24px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 11px;
+        }
+
+        @media (max-width: 1050px) {
+            .form-grid { grid-template-columns: 1fr 1fr 1fr; }
+            .workflow { grid-template-columns: 1fr 1fr; }
+            .metrics { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 760px) {
+            .container { width: min(100% - 22px, 1280px); padding-top: 16px; }
+            .topbar { align-items: flex-start; }
+            .system-status { display: none; }
+            .hero { padding: 24px; }
+            .grid-2, .workflow, .metrics, .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">D</div>
+            <div>
+                <h1>DakPay</h1>
+                <p>Offline Mesh Payment Prototype</p>
+            </div>
+        </div>
+        <div class="system-status">
+            <span class="dot"></span>
+            Spring Boot backend running
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="eyebrow">Offline-first payment infrastructure</div>
+        <h2>Move a payment through the mesh — even without internet.</h2>
+        <p>
+            DakPay demonstrates deferred-settlement payments where an encrypted transaction
+            travels across nearby virtual devices until an internet-connected bridge reaches
+            the backend. The prototype focuses on encryption, mesh forwarding, replay protection,
+            idempotency, and atomic settlement.
+        </p>
+
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-label">Encryption</div>
+                <div class="metric-value">AES-GCM</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Key Exchange</div>
+                <div class="metric-value">RSA-OAEP</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Deduplication</div>
+                <div class="metric-value">SHA-256</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Settlement</div>
+                <div class="metric-value">Atomic</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="workflow">
+        <div class="step">
+            <div class="step-number">01</div>
+            <strong>Create payment</strong>
+            <span>Build and encrypt a payment instruction for Pratap or Singh.</span>
+        </div>
+        <div class="step">
+            <div class="step-number">02</div>
+            <strong>Forward through mesh</strong>
+            <span>Virtual devices gossip the encrypted packet from phone to phone.</span>
+        </div>
+        <div class="step">
+            <div class="step-number">03</div>
+            <strong>Bridge to backend</strong>
+            <span>An internet-enabled bridge uploads the packet when connectivity returns.</span>
+        </div>
+        <div class="step">
+            <div class="step-number">04</div>
+            <strong>Verify & settle</strong>
+            <span>Deduplicate, decrypt, validate freshness, then debit and credit atomically.</span>
+        </div>
+    </section>
+
+    <section class="card controls">
+        <div class="section-heading">
+            <div>
+                <h3>Payment Simulator</h3>
+                <p>Use the controls below to demonstrate the complete DakPay transaction flow.</p>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div>
+                <label for="senderVpa">Sender</label>
+                <select id="senderVpa">
+                    <option value="pratap@demo">Pratap — pratap@demo</option>
+                    <option value="singh@demo">Singh — singh@demo</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="receiverVpa">Receiver</label>
+                <select id="receiverVpa">
+                    <option value="singh@demo">Singh — singh@demo</option>
+                    <option value="pratap@demo">Pratap — pratap@demo</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="amount">Amount (₹)</label>
+                <input type="number" id="amount" value="500" min="1" step="1">
+            </div>
+
+            <div>
+                <label for="pin">PIN</label>
+                <input type="password" id="pin" value="1234" maxlength="4" inputmode="numeric">
+            </div>
+
+            <button onclick="sendPacket()">Send to Mesh</button>
+        </div>
+
+        <div class="button-row">
+            <button class="secondary" onclick="gossip()">Run Gossip Round</button>
+            <button class="secondary" onclick="flushBridges()">Bridge Upload</button>
+            <button class="danger" onclick="resetMesh()">Reset Mesh</button>
+        </div>
+    </section>
+
+    <div class="grid-2">
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <h3>Mesh Network</h3>
+                    <p>Virtual devices carrying encrypted payment packets.</p>
+                </div>
+            </div>
+            <div id="devices"></div>
+        </section>
+
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <h3>Account Balances</h3>
+                    <p>Current balances maintained by the demo settlement layer.</p>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table id="accounts-table">
+                    <thead>
+                    <tr><th>VPA</th><th>Account Holder</th><th>Balance</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p class="small" id="cacheInfo"></p>
+        </section>
+    </div>
+
+    <section class="card" style="margin-bottom:20px;">
+        <div class="section-heading">
+            <div>
+                <h3>Transaction Ledger</h3>
+                <p>Settlement history returned by the Spring Boot API.</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table id="tx-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Bridge</th>
+                    <th>Hops</th>
+                    <th>Settled</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="section-heading">
+            <div>
+                <h3>System Activity</h3>
+                <p>Live events from the DakPay simulation.</p>
+            </div>
+        </div>
+        <div id="log"></div>
+    </section>
+
+    <div class="footer">
+        DakPay • Offline Mesh Payment Prototype • For learning, demonstration and portfolio use
+    </div>
+</div>
+
+<script>
+    function log(msg) {
+        const el = document.getElementById('log');
+        el.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n' + el.textContent;
+    }
+
+    async function refresh() {
+        try {
+            const m = await fetch('/api/mesh/state').then(r => r.json());
+            const devicesDiv = document.getElementById('devices');
+
+            devicesDiv.innerHTML = m.devices.map(d => `
+                <div class="device ${d.hasInternet ? 'bridge' : 'offline'}">
+                    <div class="device-head">
+                        <span class="device-name">${d.deviceId}</span>
+                        <span class="badge ${d.hasInternet ? 'badge-online' : 'badge-offline'}">
+                            ${d.hasInternet ? '● 4G CONNECTED' : '● OFFLINE'}
+                        </span>
+                    </div>
+                    <div class="small" style="margin-top:6px;">
+                        Holding ${d.packetCount} packet(s)
+                    </div>
+                    <div>${d.packetIds.map(id =>
+                        `<span class="packet-id">${id}</span>`).join('')}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('cacheInfo').textContent =
+                `Idempotency cache entries: ${m.idempotencyCacheSize}`;
+
+            const accs = await fetch('/api/accounts').then(r => r.json());
+            document.querySelector('#accounts-table tbody').innerHTML = accs.map(a => `
+                <tr>
+                    <td>${a.vpa}</td>
+                    <td>${a.holderName}</td>
+                    <td class="balance">₹${parseFloat(a.balance).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            const txs = await fetch('/api/transactions').then(r => r.json());
+            document.querySelector('#tx-table tbody').innerHTML = txs.map(t => `
+                <tr>
+                    <td>${t.id}</td>
+                    <td>${t.senderVpa}</td>
+                    <td>${t.receiverVpa}</td>
+                    <td class="balance">₹${parseFloat(t.amount).toFixed(2)}</td>
+                    <td class="status-${t.status}">${t.status}</td>
+                    <td>${t.bridgeNodeId}</td>
+                    <td>${t.hopCount}</td>
+                    <td class="small">${t.settledAt ? new Date(t.settledAt).toLocaleTimeString() : '-'}</td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            log('⚠ Unable to refresh dashboard: ' + error.message);
+        }
+    }
+
+    async function sendPacket() {
+        const body = {
+            senderVpa: document.getElementById('senderVpa').value,
+            receiverVpa: document.getElementById('receiverVpa').value,
+            amount: parseFloat(document.getElementById('amount').value),
+            pin: document.getElementById('pin').value,
+            ttl: 5,
+            startDevice: 'phone-pratap'
+        };
+
+        try {
+            const r = await fetch('/api/demo/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            }).then(r => r.json());
+
+            if (!r.packetId) {
+                log('⚠ Payment request failed: ' + JSON.stringify(r));
+                return;
+            }
+
+            log(`✓ Packet ${r.packetId.substring(0, 8)} encrypted & injected at ${r.injectedAt} (TTL ${r.ttl})`);
+            log(`  Ciphertext preview: ${r.ciphertextPreview}`);
+            refresh();
+        } catch (error) {
+            log('⚠ Send failed: ' + error.message);
+        }
+    }
+
+    async function gossip() {
+        try {
+            const r = await fetch('/api/mesh/gossip', {method: 'POST'}).then(r => r.json());
+            log(`↻ Gossip round: ${r.transfers} transfer(s) — ${JSON.stringify(r.deviceCounts)}`);
+            refresh();
+        } catch (error) {
+            log('⚠ Gossip failed: ' + error.message);
+        }
+    }
+
+    async function flushBridges() {
+        try {
+            const r = await fetch('/api/mesh/flush', {method: 'POST'}).then(r => r.json());
+            log(`↥ ${r.uploadsAttempted} bridge upload(s)`);
+
+            r.results.forEach(res => {
+                log(`  ${res.bridgeNode} → packet ${res.packetId} → ${res.outcome}` +
+                    (res.reason ? ` (${res.reason})` : ''));
+            });
+
+            refresh();
+        } catch (error) {
+            log('⚠ Bridge upload failed: ' + error.message);
+        }
+    }
+
+    async function resetMesh() {
+        try {
+            await fetch('/api/mesh/reset', {method: 'POST'});
+            log('↺ Mesh and idempotency cache cleared');
+            refresh();
+        } catch (error) {
+            log('⚠ Reset failed: ' + error.message);
+        }
+    }
+
+    refresh();
+    setInterval(refresh, 3000);
+</script>
+</body>
+</html>
